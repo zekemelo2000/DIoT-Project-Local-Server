@@ -2,6 +2,7 @@ import pymongo
 from pymongo import collection, MongoClient
 from pymongo.errors import ConnectionFailure
 
+# Requires initial setup of MongoBootStrap.py
 # Replace the placeholder with your actual connection string
 CONNECTION_STRING = "mongodb://localhost:27017"
 DB_STRING = "local"

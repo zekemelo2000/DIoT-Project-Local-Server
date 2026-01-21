@@ -1,21 +1,145 @@
 #This file requires user to have a mongodb server and an .env file
 #the .env file should include the following parameters:
 #MONGO_URI
-#MONGO_ADMIN
-#MONGO_ADMIN_PASS
 #APP_USER
-#APP_USER_PASS
+#APP_PASS
 #PAYLOAD (This is for making an api key)
 
 import os
+from urllib.parse import quote_plus
+
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from pymongo.errors import OperationFailure, CollectionInvalid
 
 load_dotenv()
+user = os.getenv("APP_USER")
+password = os.getenv("APP_PASS")
+encoded_user = quote_plus(user)
+encoded_password = quote_plus(password)
 
-admin_user = os.getenv("MONGO_ADMIN_USER")
-admin_password = os.getenv("MONGO_ADMIN_PASSWORD")
+uri = f"mongodb://{encoded_user}:{encoded_password}@localhost:27017/?authSource=admin"
 
-uri = f"mongodb://{admin_user}:{admin_password}@localhost:27017/?authSource=admin"
-client = MongoClient(uri)
+api_keys_validation = {
+  "$jsonSchema": {
+    "bsonType": "object",
+    "required": [
+      "_id",
+      "API key",
+      "Secret"
+    ],
+    "properties": {
+      "_id": {
+        "bsonType": "objectId"
+      },
+      "API key": {
+        "bsonType": "string"
+      },
+      "Secret": {
+        "bsonType": "string"
+      }
+    }
+  }
+}
 
+dummy_api_keys_validation = {
+  "$jsonSchema": {
+    "bsonType": "object",
+    "required": [
+      "_id",
+      "API key",
+      "Secret"
+    ],
+    "properties": {
+      "_id": {
+        "bsonType": "objectId"
+      },
+      "API key": {
+        "bsonType": "string"
+      },
+      "Secret": {
+        "bsonType": "string"
+      }
+    }
+  }
+}
+
+wifi_connections_validation = {
+  "$jsonSchema": {
+    "bsonType": "object",
+    "required": [
+      "_id",
+      "Password",
+      "SSID"
+    ],
+    "properties": {
+      "_id": {
+        "bsonType": "objectId"
+      },
+      "Password": {
+        "bsonType": "string"
+      },
+      "SSID": {
+        "bsonType": "string"
+      }
+    }
+  }
+}
+
+def test_connection():
+    client = MongoClient(uri)
+    try:
+        client.admin.command('ping')
+        print("Authentication successful.")
+    except OperationFailure:
+        print("Authentication failed.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    client.close()
+
+def initialize_database():
+    client = MongoClient(uri)
+    db = client["iotdb"]
+    try:
+        db.create_collection("api_keys", validator=api_keys_validation )
+        print("Collection 'api_keys' created.")
+    except CollectionInvalid:
+        print("Collection 'api_keys' already exists.")
+
+    try:
+        db.create_collection("dummy_api_keys", validator=dummy_api_keys_validation )
+        print("Collection 'dummy_api_keys' created.")
+    except CollectionInvalid:
+        print("Collection 'dummy_api_keys' already exists.")
+
+    try:
+        db.create_collection("wifi_connections", validator=wifi_connections_validation )
+        print("Collection 'wifi_connections' created.")
+    except CollectionInvalid:
+        print("Collection 'wifi_connections' already exists.")
+
+    client.close()
+
+def drop_database():
+    client = MongoClient(uri)
+    db = client["iotdb"]
+    collection_name = "api_keys"
+    if collection_name in db.list_collection_names():
+        db.drop_collection(collection_name)
+        print(f"Collection {collection_name} dropped.")
+    else:
+        print(f"Collection {collection_name} does not exist.")
+
+    collection_name = "dummy_api_keys"
+    if collection_name in db.list_collection_names():
+        db.drop_collection(collection_name)
+        print(f"Collection {collection_name} dropped.")
+    else:
+        print(f"Collection {collection_name} does not exist.")
+
+    collection_name = "wifi_connections"
+    if collection_name in db.list_collection_names():
+        db.drop_collection(collection_name)
+        print(f"Collection {collection_name} dropped.")
+    else:
+        print(f"Collection {collection_name} does not exist.")

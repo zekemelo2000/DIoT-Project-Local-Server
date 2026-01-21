@@ -1,13 +1,10 @@
-from flask import Flask, jsonify
 from flask import request
 import MongoConnection
 import asyncio
 import WifiConnection
+import MongoBootStrap
 from quart import Quart
 app = Quart(__name__)
-
-
-from markupsafe import escape
 
 @app.route("/")
 async def hello():
@@ -21,7 +18,7 @@ async def hello():
 #     else:
 #         return '500'
 @app.route('/ESP32', methods=['GET', 'POST'])
-async def index():
+async def esp32():
     if request.method == 'POST':
         print('POST was requested.')
         data = request.get_json()
@@ -34,7 +31,7 @@ async def index():
         return '500'
 
 @app.route('/RemotePair', methods=['GET', 'POST'])
-async def index():
+async def remote_pair():
     if request.method == 'POST':
         print('POST was requested.')
         return '200'
@@ -88,7 +85,19 @@ async def input_loop():
             case "factory reset" | "factory_reset":
                 pass
             case "test":
-                print("here is an input test string")
+                print("testing connection")
+                MongoBootStrap.test_connection()
+            case "initialize database" | "initialize_database":
+                print("initializing database")
+                MongoBootStrap.initialize_database()
+            case "drop database" | "drop_db":
+                decision = await asyncio.to_thread(input, "WARNING: YOU ARE DROPPING COLLECTIONS, "
+                                                          "DO YOU UNDERSTAND AND WANT TO CONTINUE? (y/n)")
+                if decision == "y":
+                    print("dropping collections")
+                    MongoBootStrap.drop_database()
+                else:
+                    print("Exiting Drop Database Process")
             case "help":
                 pass
 
