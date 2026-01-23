@@ -75,7 +75,6 @@ async def input_loop():
                 pass
             case "connect to remote server" | "connect_to_remote_server":
                 remote_ip = await asyncio.to_thread(input, "Enter the IP address of the remote server: ")
-
             case "show log" | "show_log":
                 pass
             case "shutdown":
