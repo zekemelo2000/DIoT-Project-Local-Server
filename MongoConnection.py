@@ -5,9 +5,10 @@ from pymongo.errors import ConnectionFailure
 # Requires initial setup of MongoBootStrap.py
 # Replace the placeholder with your actual connection string
 CONNECTION_STRING = "mongodb://localhost:27017"
-DB_STRING = "local"
+DB_STRING = "iotdb"
 
-
+# pass the collection name
+# when using make sure to add close()
 def get_database(database_name):
     # Create a connection using MongoClient
     try:

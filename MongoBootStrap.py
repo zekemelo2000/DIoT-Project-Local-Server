@@ -26,7 +26,7 @@ api_keys_validation = {
     "required": [
       "_id",
       "API key",
-      "Secret"
+      "Hashed secret"
     ],
     "properties": {
       "_id": {
@@ -86,6 +86,28 @@ wifi_connections_validation = {
   }
 }
 
+api_passport_validation = {
+  "$jsonSchema": {
+    "bsonType": "object",
+    "required": [
+      "_id",
+      "API key",
+      "Secret"
+    ],
+    "properties": {
+      "_id": {
+        "bsonType": "objectId"
+      },
+      "API key": {
+        "bsonType": "string"
+      },
+      "Secret": {
+        "bsonType": "string"
+      }
+    }
+  }
+}
+
 def test_connection():
     client = MongoClient(uri)
     try:
@@ -118,6 +140,12 @@ def initialize_database():
     except CollectionInvalid:
         print("Collection 'wifi_connections' already exists.")
 
+    try:
+        db.create_collection("api_passport_validation", validator=api_passport_validation )
+        print("Collection 'api_passport_validation' created.")
+    except CollectionInvalid:
+        print("Collection 'api_passport_validation' already exists.")
+
     client.close()
 
 def drop_database():
@@ -143,3 +171,12 @@ def drop_database():
         print(f"Collection {collection_name} dropped.")
     else:
         print(f"Collection {collection_name} does not exist.")
+
+    collection_name = "api_passport_validation"
+    if collection_name in db.list_collection_names():
+        db.drop_collection(collection_name)
+        print(f"Collection {collection_name} dropped.")
+    else:
+        print(f"Collection {collection_name} does not exist.")
+
+    client.close()

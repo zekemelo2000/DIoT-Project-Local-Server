@@ -1,10 +1,32 @@
-from flask import request
+import secrets
+
+import APIAuthentication
 import MongoConnection
 import asyncio
 import WifiConnection
 import MongoBootStrap
-from quart import Quart
+from quart import Quart, request, jsonify
+from dotenv import load_dotenv
+from passlib.hash import argon2
+import os
 app = Quart(__name__)
+load_dotenv()
+
+@app.route('/pair-server', methods=['POST'])
+async def pair():
+    admin_token = request.headers.get('Authorization')
+
+    if not argon2.verify(admin_token, os.getenv("DUMMY_SERVER_KEY")):
+        return {"error": "Unauthorized"}, 401
+
+    api_key, secret_plaintext, secret_hash = (
+        APIAuthentication.generate_api_credentials())
+
+    secret_hash = argon2.hash(secret_plaintext)
+    #FIX ME ADD TO DATABASE
+
+    return jsonify({"api_key": api_key,
+                    "secret_hash": secret_hash})
 
 @app.route("/")
 async def hello():
