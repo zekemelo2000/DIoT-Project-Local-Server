@@ -1,5 +1,7 @@
 import secrets
 
+from pymongo.errors import OperationFailure
+
 import APIAuthentication
 import MongoConnection
 import asyncio
@@ -124,7 +126,10 @@ async def input_loop():
 
 async def server():
     mongoconnection = MongoConnection.get_database("api_keys")
-    print(mongoconnection.find_one({"API key": "test"}))
+    try:
+        print(mongoconnection.find_one({"API key": "test"}))
+    except OperationFailure:
+        print(f"error has occurred: Authentication required")
     await app.run_task(host="0.0.0.0", port=8080)
 
 async def main():

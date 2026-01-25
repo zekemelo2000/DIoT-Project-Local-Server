@@ -1,18 +1,11 @@
-import MongoConnection
-import time
 import os
-import hashlib
-import hmac
-import requests
 import secrets
-from passlib.hash import argon2
-from quart import request, Quart, abort
 
-
-from cryptography.hazmat.primitives import hmac
+import requests
 from dotenv import load_dotenv
-from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure, ConnectionFailure, OperationFailure
+from passlib.hash import argon2
+import MongoConnection
+
 load_dotenv()
 
 data = os.getenv("PAYLOAD")
