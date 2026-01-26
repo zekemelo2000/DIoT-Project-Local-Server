@@ -12,6 +12,7 @@ data = os.getenv("PAYLOAD")
 API_SECRET = os.getenv("API_SECRET").encode("utf-8")
 server_name = os.getenv("SERVER_NAME").encode("utf-8")
 server_key = os.getenv("SERVER_KEY").encode("utf-8")
+
 # Meant to be used by Local Servers to Pair with Remote Servers,
 # Could be used by Remote Server to Pair with Local
 def save_key_pair(api_key, api_secret):
@@ -33,19 +34,18 @@ def save_passport_pair(api_key, api_secret):
                 connection.close()
 
 def generate_api_credentials():
-        # 1. Generate a high-entropy Key and Secret
-        # 'pk_' for public key, 'sk_' for secret key (common convention)
+        # Generate a high-entropy Key and Secret
         api_key = f"pk_{secrets.token_urlsafe(32)}"
         api_secret_plaintext = f"sk_{secrets.token_urlsafe(32)}"
 
-        # 2. Hash the secret before storage
+        # Hash the secret before storage
         hashed_secret = argon2.hash(api_secret_plaintext)
 
-        # In a real app, you'd save these to your DB:
-        # db.save(key=api_key, secret_hash=hashed_secret)
+        # Saved hashed secret in API Authentication
         save_key_pair(api_key, hashed_secret)
         return api_key, api_secret_plaintext, hashed_secret
 
+# Needs to be pushed in with JSON
 def pair_server(pairing_url):
         headers = {"Authorization": server_key}
         body = {"server_name": server_name}
@@ -57,8 +57,10 @@ def pair_server(pairing_url):
                 print(f"Pairing successful.")
                 print(f"API_KEY: {cred['api_key']}")
                 print(f"API_SECRET: {cred['api_secret']}")
+                save_passport_pair(cred['api_key'], cred['api_secret'])
+        else:
+                print(f"Pairing failed.")
 
-                # FIX MEAdd to the Database and remove the prints
 
 # FIX ME to validate later
 # def send_connection_request(url, api_key):
