@@ -25,7 +25,7 @@ async def pair():
         APIAuthentication.generate_api_credentials())
 
     secret_hash = argon2.hash(secret_plaintext)
-    #FIX ME ADD TO DATABASE
+    APIAuthentication.save_key_pair(api_key, secret_hash)
 
     return jsonify({"api_key": api_key,
                     "secret_hash": secret_hash})

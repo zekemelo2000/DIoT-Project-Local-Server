@@ -41,8 +41,6 @@ def generate_api_credentials():
         # Hash the secret before storage
         hashed_secret = argon2.hash(api_secret_plaintext)
 
-        # Saved hashed secret in API Authentication
-        save_key_pair(api_key, hashed_secret)
         return api_key, api_secret_plaintext, hashed_secret
 
 # Needs to be pushed in with JSON
