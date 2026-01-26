@@ -16,13 +16,21 @@ server_key = os.getenv("SERVER_KEY").encode("utf-8")
 # Could be used by Remote Server to Pair with Local
 def save_key_pair(api_key, api_secret):
         connection = MongoConnection.get_database("api_keys")
-        connection.insert_one({"api_key": api_key, "api_secret": api_secret})
-        connection.close()
+        try:
+                connection.insert_one({"api_key": api_key, "api_secret": api_secret})
+        except Exception as e:
+                print(f"Saving API Pair has encountered an error: {e}")
+        finally:
+                connection.close()
 
-def add_to_passport(api_key, api_secret):
+def save_passport_pair(api_key, api_secret):
         connection = MongoConnection.get_database("api_passport")
-        connection.insert_one({"api_key": api_key, "api_secret": api_secret})
-        connection.close()
+        try:
+                connection.insert_one({"api_key": api_key, "api_secret": api_secret})
+        except Exception as e:
+                print(f"Saving Passport Pair has encountered an error: {e}")
+        finally:
+                connection.close()
 
 def generate_api_credentials():
         # 1. Generate a high-entropy Key and Secret
@@ -35,7 +43,7 @@ def generate_api_credentials():
 
         # In a real app, you'd save these to your DB:
         # db.save(key=api_key, secret_hash=hashed_secret)
-
+        save_key_pair(api_key, hashed_secret)
         return api_key, api_secret_plaintext, hashed_secret
 
 def pair_server(pairing_url):
