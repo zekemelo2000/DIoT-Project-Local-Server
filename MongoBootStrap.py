@@ -23,14 +23,10 @@ api_keys_validation = {
   "$jsonSchema": {
     "bsonType": "object",
     "required": [
-      "URL"
       "API key",
       "Hashed secret"
     ],
     "properties": {
-      "URL": {
-        "bsonType": "string"
-      },
       "API key": {
         "bsonType": "string"
       },
@@ -81,14 +77,10 @@ api_passport_validation = {
   "$jsonSchema": {
     "bsonType": "object",
     "required": [
-      "URL",
       "API key",
       "Secret"
     ],
     "properties": {
-       "URL": {
-            "bsonType": "string"
-       },
       "API key": {
         "bsonType": "string"
       },
