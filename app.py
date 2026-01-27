@@ -16,6 +16,7 @@ load_dotenv()
 async def pair():
     if request.method == "POST":
         admin_token = request.headers.get('Authorization')
+        requesting_server_name = request.body.get('server_name')
 
         if admin_token is None:
             return "Error no Authorization header"
@@ -26,9 +27,11 @@ async def pair():
             APIAuthentication.generate_api_credentials())
 
         secret_hash = argon2.hash(secret_plaintext)
-        APIAuthentication.save_key_pair(api_key, secret_hash)
 
-        return jsonify({"api_key": api_key,
+        APIAuthentication.save_key_pair(requesting_server_name, api_key, secret_hash)
+
+        return jsonify({"server_name": os.getenv("SERVER_NAME")
+                       ,"api_key": api_key,
                         "secret": secret_plaintext}, 200)
     if request.method == "GET":
         return "<h1>Welcome to my Quart GET Server </h1><p>The server is active!</p>"
@@ -101,6 +104,7 @@ async def input_loop():
             case "connect device" | "connect_to_device":
                 pass
             case "connect to remote server" | "connect_to_remote_server":
+                server_name = os.getenv("SERVER_NAME")
                 pairing_ip = await asyncio.to_thread(input, "Enter the IP address of the remote server: ")
                 APIAuthentication.pair_server(pairing_ip)
             case "show log" | "show_log":
