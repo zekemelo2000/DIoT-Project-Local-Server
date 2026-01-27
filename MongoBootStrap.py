@@ -7,7 +7,6 @@
 
 import os
 from urllib.parse import quote_plus
-
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.errors import OperationFailure, CollectionInvalid
@@ -24,14 +23,10 @@ api_keys_validation = {
   "$jsonSchema": {
     "bsonType": "object",
     "required": [
-      "_id",
       "API key",
       "Hashed secret"
     ],
     "properties": {
-      "_id": {
-        "bsonType": "objectId"
-      },
       "API key": {
         "bsonType": "string"
       },
@@ -46,14 +41,10 @@ dummy_api_keys_validation = {
   "$jsonSchema": {
     "bsonType": "object",
     "required": [
-      "_id",
       "API key",
       "Secret"
     ],
     "properties": {
-      "_id": {
-        "bsonType": "objectId"
-      },
       "API key": {
         "bsonType": "string"
       },
@@ -68,14 +59,10 @@ wifi_connections_validation = {
   "$jsonSchema": {
     "bsonType": "object",
     "required": [
-      "_id",
       "Password",
       "SSID"
     ],
     "properties": {
-      "_id": {
-        "bsonType": "objectId"
-      },
       "Password": {
         "bsonType": "string"
       },
@@ -90,14 +77,10 @@ api_passport_validation = {
   "$jsonSchema": {
     "bsonType": "object",
     "required": [
-      "_id",
       "API key",
       "Secret"
     ],
     "properties": {
-      "_id": {
-        "bsonType": "objectId"
-      },
       "API key": {
         "bsonType": "string"
       },

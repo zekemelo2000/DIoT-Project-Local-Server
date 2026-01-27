@@ -1,7 +1,6 @@
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
-from collections.abc import MutableMapping
-from collections import namedtuple
+import collections.abc
 # Requires initial setup of MongoBootStrap.py
 # Replace the placeholder with your actual connection string
 CONNECTION_STRING = "mongodb://localhost:27017"

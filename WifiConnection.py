@@ -3,6 +3,7 @@ import pywifi
 from pywifi import const
 import asyncio
 import MongoConnection
+import collections.abc
 
 async def scan_ssids():
     wifi = pywifi.PyWiFi()

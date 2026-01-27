@@ -1,7 +1,5 @@
-import secrets
 
 from pymongo.errors import OperationFailure
-
 import APIAuthentication
 import MongoConnection
 import asyncio
@@ -14,21 +12,27 @@ import os
 app = Quart(__name__)
 load_dotenv()
 
-@app.route('/pair-server', methods=['POST'])
+@app.route('/pair-server', methods=['POST','GET'])
 async def pair():
-    admin_token = request.headers.get('Authorization')
+    if request.method == "POST":
+        admin_token = request.headers.get('Authorization')
 
-    if not argon2.verify(admin_token, os.getenv("DUMMY_SERVER_KEY")):
-        return {"error": "Unauthorized"}, 401
+        if admin_token is None:
+            return "Error no Authorization header"
+        if not APIAuthentication.check_hash(admin_token, os.getenv("DUMMY_SERVER_KEY")):
+            return {"error": "Unauthorized"}, 401
 
-    api_key, secret_plaintext, secret_hash = (
-        APIAuthentication.generate_api_credentials())
+        api_key, secret_plaintext, secret_hash = (
+            APIAuthentication.generate_api_credentials())
 
-    secret_hash = argon2.hash(secret_plaintext)
-    APIAuthentication.save_key_pair(api_key, secret_hash)
+        secret_hash = argon2.hash(secret_plaintext)
+        APIAuthentication.save_key_pair(api_key, secret_hash)
 
-    return jsonify({"api_key": api_key,
-                    "secret_hash": secret_hash})
+        return jsonify({"api_key": api_key,
+                        "secret": secret_plaintext}, 200)
+    if request.method == "GET":
+        return "<h1>Welcome to my Quart GET Server </h1><p>The server is active!</p>"
+    return "<h1>Welcome to my Quart Server</h1><p>The server is active!</p>"
 
 @app.route("/")
 async def hello():
@@ -92,13 +96,13 @@ async def input_loop():
                         await WifiConnection.verify_wifi_credentials(ssid_in_use, line)
                     else:
                         pass
-
             case "scan devices" | "scan" | "scan_devices":
                 pass
             case "connect device" | "connect_to_device":
                 pass
             case "connect to remote server" | "connect_to_remote_server":
-                remote_ip = await asyncio.to_thread(input, "Enter the IP address of the remote server: ")
+                pairing_ip = await asyncio.to_thread(input, "Enter the IP address of the remote server: ")
+                APIAuthentication.pair_server(pairing_ip)
             case "show log" | "show_log":
                 pass
             case "shutdown":

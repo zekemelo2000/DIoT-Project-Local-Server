@@ -5,7 +5,6 @@ import requests
 from dotenv import load_dotenv
 from passlib.hash import argon2
 import MongoConnection
-
 load_dotenv()
 
 data = os.getenv("PAYLOAD")
@@ -15,23 +14,23 @@ server_key = os.getenv("SERVER_KEY").encode("utf-8")
 
 # Meant to be used by Local Servers to Pair with Remote Servers,
 # Could be used by Remote Server to Pair with Local
+
+def check_hash(hashed_token, local_key):
+        local_hash = argon2.hash(local_key)
+        return argon2.verify(hashed_token, local_hash)
 def save_key_pair(api_key, api_secret):
         connection = MongoConnection.get_database("api_keys")
         try:
-                connection.insert_one({"api_key": api_key, "api_secret": api_secret})
+                connection.insert_one({"API key": api_key, "Hashed secret": api_secret})
         except Exception as e:
                 print(f"Saving API Pair has encountered an error: {e}")
-        finally:
-                connection.close()
 
 def save_passport_pair(api_key, api_secret):
         connection = MongoConnection.get_database("api_passport")
         try:
-                connection.insert_one({"api_key": api_key, "api_secret": api_secret})
+                connection.insert_one({"API key": api_key, "Secret": api_secret})
         except Exception as e:
                 print(f"Saving Passport Pair has encountered an error: {e}")
-        finally:
-                connection.close()
 
 def generate_api_credentials():
         # Generate a high-entropy Key and Secret
@@ -46,16 +45,19 @@ def generate_api_credentials():
 # Needs to be pushed in with JSON
 def pair_server(pairing_url):
         headers = {"Authorization": server_key}
-        body = {"server_name": server_name}
+        body = {"server_name": server_name.decode("utf-8")}
 
-        response = requests.post(pairing_url, headers=headers, json=body)
+        try:
+                response = requests.post(pairing_url.encode('utf-8'), headers=headers, json=body)
+        except Exception as e:
+                print(f"Saving Pairing has encountered an error: {e}")
 
         if response.status_code == 200:
                 cred = response.json()
                 print(f"Pairing successful.")
-                print(f"API_KEY: {cred['api_key']}")
-                print(f"API_SECRET: {cred['api_secret']}")
-                save_passport_pair(cred['api_key'], cred['api_secret'])
+                print(f"API_KEY: {cred[0]["api_key"]}")
+                print(f"API_SECRET: {cred[0]["secret"]}")
+                save_passport_pair(cred[0]["api_key"], cred[0]["secret"])
         else:
                 print(f"Pairing failed.")
 
