@@ -119,7 +119,7 @@ async def input_loop():
                 MongoBootStrap.initialize_database()
             case "drop database" | "drop_db":
                 decision = await asyncio.to_thread(input, "WARNING: YOU ARE DROPPING COLLECTIONS, "
-                                                          "DO YOU UNDERSTAND AND WANT TO CONTINUE? (y/n)")
+                                                          "DO YOU UNDERSTAND AND WANT TO CONTINUE? (y/n)\n")
                 if decision == "y":
                     print("dropping collections")
                     MongoBootStrap.drop_database()

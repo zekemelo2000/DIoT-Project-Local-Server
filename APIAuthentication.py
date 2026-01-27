@@ -18,17 +18,17 @@ server_key = os.getenv("SERVER_KEY").encode("utf-8")
 def check_hash(hashed_token, local_key):
         local_hash = argon2.hash(local_key)
         return argon2.verify(hashed_token, local_hash)
-def save_key_pair(api_key, api_secret):
+def save_key_pair(url, api_key, api_secret):
         connection = MongoConnection.get_database("api_keys")
         try:
-                connection.insert_one({"API key": api_key, "Hashed secret": api_secret})
+                connection.insert_one({"URL": url,"API key": api_key, "Hashed secret": api_secret})
         except Exception as e:
                 print(f"Saving API Pair has encountered an error: {e}")
 
-def save_passport_pair(api_key, api_secret):
+def save_passport_pair(url, api_key, api_secret):
         connection = MongoConnection.get_database("api_passport")
         try:
-                connection.insert_one({"API key": api_key, "Secret": api_secret})
+                connection.insert_one({"URL": url,"API key": api_key, "Secret": api_secret})
         except Exception as e:
                 print(f"Saving Passport Pair has encountered an error: {e}")
 
@@ -47,6 +47,7 @@ def pair_server(pairing_url):
         headers = {"Authorization": server_key}
         body = {"server_name": server_name.decode("utf-8")}
 
+        response = None
         try:
                 response = requests.post(pairing_url.encode('utf-8'), headers=headers, json=body)
         except Exception as e:
@@ -54,10 +55,10 @@ def pair_server(pairing_url):
 
         if response.status_code == 200:
                 cred = response.json()
-                print(f"Pairing successful.")
-                print(f"API_KEY: {cred[0]["api_key"]}")
-                print(f"API_SECRET: {cred[0]["secret"]}")
-                save_passport_pair(cred[0]["api_key"], cred[0]["secret"])
+                #print(f"Pairing successful.")
+                #print(f"API_KEY: {cred[0]["api_key"]}")
+                #print(f"API_SECRET: {cred[0]["secret"]}")
+                save_passport_pair(pairing_url, cred[0]["api_key"], cred[0]["secret"])
         else:
                 print(f"Pairing failed.")
 
