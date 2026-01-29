@@ -1,9 +1,8 @@
 import os
 from passlib.hash import argon2
-from quart import Blueprint
-from quart import request, jsonify
+from quart import Blueprint, request, jsonify, current_app
 
-import APIAuthentication
+import api_authentication
 
 api_bp = Blueprint('api', __name__)
 

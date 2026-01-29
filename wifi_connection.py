@@ -2,7 +2,7 @@ import time
 import pywifi
 from pywifi import const
 import asyncio
-import MongoConnection
+import mongo_connection
 import collections.abc
 
 async def scan_ssids():

@@ -4,7 +4,7 @@ import secrets
 import requests
 from dotenv import load_dotenv
 from passlib.hash import argon2
-import MongoConnection
+import mongo_connection
 load_dotenv()
 
 data = os.getenv("PAYLOAD")

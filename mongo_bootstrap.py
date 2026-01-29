@@ -1,23 +1,4 @@
-#This file requires user to have a mongodb server and an .env file
-#the .env file should include the following parameters:
-#MONGO_URI
-#APP_USER
-#APP_PASS
-#PAYLOAD (This is for making an api key)
-
-import os
-from urllib.parse import quote_plus
-from dotenv import load_dotenv
-from pymongo import MongoClient
-from pymongo.errors import OperationFailure, CollectionInvalid
-
-load_dotenv()
-user = os.getenv("APP_USER")
-password = os.getenv("APP_PASS")
-encoded_user = quote_plus(user)
-encoded_password = quote_plus(password)
-
-uri = f"mongodb://{encoded_user}:{encoded_password}@localhost:27017/?authSource=admin"
+from pymongo.errors import CollectionInvalid
 
 api_keys_validation = {
   "$jsonSchema": {
@@ -38,7 +19,9 @@ api_keys_validation = {
         "bsonType": "string"
       }
     }
-  }
+  },
+  "validationLevel": "strict",
+  "validationAction": "error"
 }
 
 dummy_api_keys_validation = {
@@ -56,7 +39,9 @@ dummy_api_keys_validation = {
         "bsonType": "string"
       }
     }
-  }
+  },
+  "validationLevel": "strict",
+  "validationAction": "error"
 }
 
 wifi_connections_validation = {
@@ -74,7 +59,9 @@ wifi_connections_validation = {
         "bsonType": "string"
       }
     }
-  }
+  },
+  "validationLevel": "strict",
+  "validationAction": "error"
 }
 
 api_passport_validation = {
@@ -96,23 +83,13 @@ api_passport_validation = {
         "bsonType": "string"
       }
     }
-  }
+  },
+  "validationLevel": "strict",
+  "validationAction": "error"
 }
 
-def test_connection():
-    client = MongoClient(uri)
-    try:
-        client.admin.command('ping')
-        print("Authentication successful.")
-    except OperationFailure:
-        print("Authentication failed.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    client.close()
 
-def initialize_database():
-    client = MongoClient(uri)
-    db = client["iotdb"]
+def initialize_database(db):
     try:
         db.create_collection("api_keys", validator=api_keys_validation )
         print("Collection 'api_keys' created.")
@@ -137,11 +114,7 @@ def initialize_database():
     except CollectionInvalid:
         print("Collection 'api_passport_validation' already exists.")
 
-    client.close()
-
-def drop_database():
-    client = MongoClient(uri)
-    db = client["iotdb"]
+def drop_database(db):
     collection_name = "api_keys"
     if collection_name in db.list_collection_names():
         db.drop_collection(collection_name)
@@ -169,5 +142,3 @@ def drop_database():
         print(f"Collection {collection_name} dropped.")
     else:
         print(f"Collection {collection_name} does not exist.")
-
-    client.close()
