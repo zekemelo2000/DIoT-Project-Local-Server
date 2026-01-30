@@ -1,4 +1,6 @@
 import os
+
+from cffi.ffiplatform import maybe_relative_path
 from passlib.hash import argon2
 from quart import Blueprint, request, jsonify, current_app
 
@@ -9,23 +11,27 @@ api_bp = Blueprint('api', __name__)
 @api_bp.route('/pair-server', methods=['POST','GET'])
 async def pair():
     if request.method == "POST":
-        admin_token = request.headers.get('Authorization')
-        requesting_server_name = request.body.get('server_name')
+        db = current_app.mongo_connection
+        my_request = await request.get_json()
+        admin_token =  request.headers.get("Authorization")
+        server_name = my_request.get("server_name")
 
         if admin_token is None:
-            return "Error no Authorization header"
-        if not APIAuthentication.check_hash(admin_token, os.getenv("DUMMY_SERVER_KEY")):
+            print("admin token was not provided")
+            return {"Error no Authorization header"}, 401
+        if not api_authentication.check_hash(admin_token):
+            print("Error on Server Key")
             return {"error": "Unauthorized"}, 401
 
         api_key, secret_plaintext, secret_hash = (
-            APIAuthentication.generate_api_credentials())
+            api_authentication.generate_api_credentials())
 
         secret_hash = argon2.hash(secret_plaintext)
+        print(api_key, secret_plaintext, secret_hash)
 
-        APIAuthentication.save_key_pair(requesting_server_name, api_key, secret_hash)
+        await api_authentication.save_key_pair(api_key, secret_hash, db)
 
-        return jsonify({"server_name": os.getenv("SERVER_NAME")
-                       ,"api_key": api_key,
+        return jsonify({"api_key": api_key,
                         "secret": secret_plaintext}, 200)
     if request.method == "GET":
         return "<h1>Welcome to my Quart GET Server </h1><p>The server is active!</p>"

@@ -37,7 +37,7 @@ def check_hash(remote_token):
                 print(f"Saving API Key has encountered an error: {e}")
                 return False
 
-def save_key_pair(api_key, api_secret, db):
+async def save_key_pair(api_key, api_secret, db):
         if check_existing_api_key(api_key, db):
                 connection = db.get_collection("api_keys")
                 try:
@@ -47,7 +47,7 @@ def save_key_pair(api_key, api_secret, db):
 
 def save_passport_pair(api_key, api_secret, db):
         if check_existing_api_key(api_key, db):
-                connection = db.get_database("api_passport")
+                connection = db.get_collection("api_passport")
                 try:
                         connection.insert_one({"API key": api_key, "Secret": api_secret})
                 except Exception as e:
@@ -64,7 +64,7 @@ def generate_api_credentials():
         return api_key, api_secret_plaintext, hashed_secret
 
 # Needs to be pushed in with JSON
-async def pair_server(pairing_url):
+async def pair_server(pairing_url, db):
         if not pairing_url.startswith(('http://', 'https://')):
                 # Default to http://
                 pairing_url = f"http://{pairing_url}"
@@ -87,7 +87,7 @@ async def pair_server(pairing_url):
                 #print(f"Pairing successful.")
                 #print(f"API_KEY: {cred[0]["api_key"]}")
                 #print(f"API_SECRET: {cred[0]["secret"]}")
-                save_passport_pair(cred[0]["api_key"], cred[0]["secret"])
+                save_passport_pair(cred[0]["api_key"], cred[0]["secret"], db)
         else:
                 print(f"Pairing failed.")
 

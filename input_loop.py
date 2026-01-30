@@ -16,7 +16,7 @@ async def input_loop(db):
         input_loop_bool = True
         while input_loop_bool:
             try:
-                await asyncio.sleep(1)
+                await asyncio.sleep(.5)
                 line = await asyncio.to_thread(input, "Enter Command: ")
                 line = line.lower()
                 match line:
@@ -33,7 +33,8 @@ async def input_loop(db):
                             pass
                         else:
                             line = await asyncio.to_thread(input, "Would you like to check the password? (y/n)"
-                                                                  "\nWARNING: THIS WILL TEMPORARILY SHUT OFF YOUR WI-FI FOR 15-20 SECONDS IF YOU PROCEED\n")
+                                                                  "\nWARNING: THIS WILL TEMPORARILY SHUT OFF "
+                                                                  "YOUR WI-FI FOR 15-20 SECONDS IF YOU PROCEED\n")
                             if line == "y":
                                 line = await asyncio.to_thread(input, "Enter Password: ")
                                 await wifi_connection.verify_wifi_credentials(ssid_in_use, line)
@@ -43,10 +44,10 @@ async def input_loop(db):
                         pass
                     case "connect device" | "connect_to_device":
                         pass
-                    case "connect to remote server" | "connect_to_remote_server":
+                    case "connect to server" | "connect_to_server":
                         server_name = os.getenv("SERVER_NAME")
                         pairing_ip = await asyncio.to_thread(input, "Enter the IP address of the remote server: ")
-                        api_authentication.pair_server(pairing_ip)
+                        await api_authentication.pair_server(pairing_ip, db)
                     case "show log" | "show_log":
                         pass
                     case "shutdown":
@@ -60,13 +61,13 @@ async def input_loop(db):
                         db.test_connection()
                     case "initialize database" | "initialize_database":
                         print("initializing database")
-                        mongo_bootstrap.initialize_database(mydb)
+                        await mongo_bootstrap.initialize_database(mydb)
                     case "drop database" | "drop_db":
                         decision = await asyncio.to_thread(input, "WARNING: YOU ARE DROPPING COLLECTIONS, "
                                                                   "DO YOU UNDERSTAND AND WANT TO CONTINUE? (y/n)\n")
                         if decision == "y":
                             print("dropping collections")
-                            mongo_bootstrap.drop_database(mydb)
+                            await mongo_bootstrap.drop_database(mydb)
                         else:
                             print("Exiting Drop Database Process")
                     case "help":
