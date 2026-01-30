@@ -4,6 +4,7 @@ import secrets
 import requests
 from dotenv import load_dotenv
 from passlib.hash import argon2
+from argon2 import PasswordHasher
 import mongo_connection
 load_dotenv()
 
@@ -11,6 +12,7 @@ data = os.getenv("PAYLOAD")
 API_SECRET = os.getenv("API_SECRET").encode("utf-8")
 server_name = os.getenv("SERVER_NAME").encode("utf-8")
 server_key = os.getenv("SERVER_KEY").encode("utf-8")
+hashed_server_key = os.getenv("HASHED_SERVER_KEY").encode("utf-8")
 
 # Meant to be used by Local Servers to Pair with Remote Servers,
 # Could be used by Remote Server to Pair with Local
@@ -26,9 +28,14 @@ def check_existing_api_key(api_key,db):
         except Exception as e:
                 print(f"Saving API Key has encountered an error: {e}")
 
-def check_hash(hashed_token, local_key):
-        local_hash = argon2.hash(local_key)
-        return argon2.verify(hashed_token, local_hash)
+def check_hash(remote_token):
+        ph = PasswordHasher()
+        try:
+                ph.verify(remote_token, hashed_server_key)
+                return True
+        except Exception as e:
+                print(f"Saving API Key has encountered an error: {e}")
+                return False
 
 def save_key_pair(api_key, api_secret, db):
         if check_existing_api_key(api_key, db):
@@ -57,9 +64,16 @@ def generate_api_credentials():
         return api_key, api_secret_plaintext, hashed_secret
 
 # Needs to be pushed in with JSON
-def pair_server(pairing_url):
+async def pair_server(pairing_url):
+        if not pairing_url.startswith(('http://', 'https://')):
+                # Default to http://
+                pairing_url = f"http://{pairing_url}"
+        pairing_url = pairing_url + "/pair-server"
+
         headers = {"Authorization": server_key}
         body = {"server_name": server_name.decode("utf-8")}
+
+        print(headers)
 
         response = None
         try:
@@ -68,11 +82,12 @@ def pair_server(pairing_url):
                 print(f"Saving Pairing has encountered an error: {e}")
 
         if response.status_code == 200:
+                print(response)
                 cred = response.json()
                 #print(f"Pairing successful.")
                 #print(f"API_KEY: {cred[0]["api_key"]}")
                 #print(f"API_SECRET: {cred[0]["secret"]}")
-                save_passport_pair(cred[0]["server_name"], cred[0]["api_key"], cred[0]["secret"])
+                save_passport_pair(cred[0]["api_key"], cred[0]["secret"])
         else:
                 print(f"Pairing failed.")
 
