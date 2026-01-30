@@ -29,7 +29,7 @@ async def server():
 
 async def main():
     app.mongo_connection.connect()
-    await asyncio.gather(server(), input_loop.input_loop(app.mongo_connection.db))
+    await asyncio.gather(server(), input_loop.input_loop(app.mongo_connection))
     return 0
 
 if __name__ == '__main__':

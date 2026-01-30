@@ -38,7 +38,7 @@ class MongoConnection:
 
     def test_connection(self):
         try:
-            self.client.command('ping')
+            self.client.admin.command('ping')
             print("Authentication successful.")
         except OperationFailure:
             print("Authentication failed.")

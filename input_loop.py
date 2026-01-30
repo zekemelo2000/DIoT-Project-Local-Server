@@ -1,13 +1,61 @@
 import asyncio
 import os
 
-from dotenv import load_dotenv
-from quart import Quart
-
 import api_authentication
-import mongo_bootstrap
 import wifi_connection
-from routes import api_bp
+import mongo_bootstrap
+
+
+async def status():
+    pass
+async def scan_ssid():
+    await wifi_connection.scan_ssids()
+async def select_ssid(ssid_in_use):
+    ssid_in_use = asyncio.to_thread(input, "Enter SSID: ")
+    print("You have selected: " + ssid_in_use)
+async def save_ssid(ssid_in_use):
+    valid_ssid = await wifi_connection.password_check(ssid_in_use)
+    if valid_ssid:
+        pass
+    else:
+        line = await asyncio.to_thread(input, "Would you like to check the password? (y/n)"
+                                              "\nWARNING: THIS WILL TEMPORARILY SHUT OFF "
+                                              "YOUR WI-FI FOR 15-20 SECONDS IF YOU PROCEED\n")
+        if line == "y":
+            line = await asyncio.to_thread(input, "Enter Password: ")
+            await wifi_connection.verify_wifi_credentials(ssid_in_use, line)
+        else:
+            pass
+async def scan_devices():
+    pass
+async def pair_device(db):
+    pass
+async def connect_to_server(db):
+    server_name = os.getenv("SERVER_NAME")
+    pairing_ip = await asyncio.to_thread(input, "Enter the IP address of the remote server: ")
+    await api_authentication.pair_server(pairing_ip, db)
+def test(db):
+    print("testing connection")
+    db.test_connection()
+async def initialize_database(db):
+    print("initializing database")
+    await mongo_bootstrap.initialize_database(db)
+async def drop_database(db):
+    decision = await asyncio.to_thread(input, "WARNING: YOU ARE DROPPING COLLECTIONS, "
+                                              "DO YOU UNDERSTAND AND WANT TO CONTINUE? (y/n)\n")
+    if decision == "y":
+        print("dropping collections")
+        await mongo_bootstrap.drop_database(db)
+    else:
+        print("Exiting Drop Database Process")
+async def help_info():
+    pass
+
+async def shutdown(db):
+    db.close()
+    print("Server is shutting down")
+
+
 
 async def input_loop(db):
     try:
@@ -16,62 +64,34 @@ async def input_loop(db):
         input_loop_bool = True
         while input_loop_bool:
             try:
-                await asyncio.sleep(.5)
+                await asyncio.sleep(1)
                 line = await asyncio.to_thread(input, "Enter Command: ")
                 line = line.lower()
                 match line:
                     case "status":
-                        pass
+                        await status()
                     case "scan ssid" | "scan_ssid" | "ssid":
-                        await wifi_connection.scan_ssids()
+                        await scan_ssid()
                     case "select ssid" | "select_ssid":
-                        ssid_in_use = await asyncio.to_thread(input, "Enter SSID: ")
-                        print("You have selected: " + ssid_in_use)
+                        await select_ssid(ssid_in_use)
                     case "connect to ssid" | "connect" | "connect_to_ssid":
-                        valid_ssid = await wifi_connection.password_check(ssid_in_use)
-                        if valid_ssid:
-                            pass
-                        else:
-                            line = await asyncio.to_thread(input, "Would you like to check the password? (y/n)"
-                                                                  "\nWARNING: THIS WILL TEMPORARILY SHUT OFF "
-                                                                  "YOUR WI-FI FOR 15-20 SECONDS IF YOU PROCEED\n")
-                            if line == "y":
-                                line = await asyncio.to_thread(input, "Enter Password: ")
-                                await wifi_connection.verify_wifi_credentials(ssid_in_use, line)
-                            else:
-                                pass
+                        await save_ssid(ssid_in_use)
                     case "scan devices" | "scan" | "scan_devices":
-                        pass
-                    case "connect device" | "connect_to_device":
-                        pass
+                        await scan_devices()
+                    case "pair device" | "pair_device":
+                        await pair_device(mydb)
                     case "connect to server" | "connect_to_server":
-                        server_name = os.getenv("SERVER_NAME")
-                        pairing_ip = await asyncio.to_thread(input, "Enter the IP address of the remote server: ")
-                        await api_authentication.pair_server(pairing_ip, db)
-                    case "show log" | "show_log":
-                        pass
-                    case "shutdown":
-                        pass
-                    case "reset":
-                        pass
-                    case "factory reset" | "factory_reset":
-                        pass
+                        await connect_to_server(mydb)
                     case "test":
-                        print("testing connection")
-                        db.test_connection()
+                        test(mydb)
                     case "initialize database" | "initialize_database":
-                        print("initializing database")
-                        await mongo_bootstrap.initialize_database(mydb)
+                        await initialize_database(mydb)
                     case "drop database" | "drop_db":
-                        decision = await asyncio.to_thread(input, "WARNING: YOU ARE DROPPING COLLECTIONS, "
-                                                                  "DO YOU UNDERSTAND AND WANT TO CONTINUE? (y/n)\n")
-                        if decision == "y":
-                            print("dropping collections")
-                            await mongo_bootstrap.drop_database(mydb)
-                        else:
-                            print("Exiting Drop Database Process")
+                        await drop_database(mydb)
                     case "help":
-                        pass
+                        await help_info()
+                    case "shutdown":
+                        await shutdown(mydb)
 
             except UnicodeDecodeError:
                 # This catches the 0xff byte sent by some terminals on Ctrl+C
