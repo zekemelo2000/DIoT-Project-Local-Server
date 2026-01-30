@@ -4,6 +4,7 @@ from urllib.parse import quote_plus
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, OperationFailure
+from motor.motor_asyncio import AsyncIOMotorClient
 
 
 class MongoConnection:
@@ -19,7 +20,7 @@ class MongoConnection:
 
     def connect(self):
         try:
-            self.client = MongoClient(self.connection_string)
+            self.client = AsyncIOMotorClient(self.connection_string)
             self.db = self.client[self.db_name]
             print(f"connected to db: {self.db_name}")
         except ConnectionFailure:

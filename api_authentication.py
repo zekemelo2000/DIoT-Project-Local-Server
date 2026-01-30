@@ -15,22 +15,36 @@ server_key = os.getenv("SERVER_KEY").encode("utf-8")
 # Meant to be used by Local Servers to Pair with Remote Servers,
 # Could be used by Remote Server to Pair with Local
 
+def check_existing_api_key(api_key,db):
+        connection = db.get_collection("api_keys")
+        try:
+                entry = connection.find_one({"API key": api_key})
+                if entry is not None:
+                        return True
+                else:
+                        return False
+        except Exception as e:
+                print(f"Saving API Key has encountered an error: {e}")
+
 def check_hash(hashed_token, local_key):
         local_hash = argon2.hash(local_key)
         return argon2.verify(hashed_token, local_hash)
-def save_key_pair(requesting_server_name, api_key, api_secret):
-        connection = MongoConnection.get_database("api_keys")
-        try:
-                connection.insert_one({"Server": requesting_server_name, "API key": api_key, "Hashed secret": api_secret})
-        except Exception as e:
-                print(f"Saving API Pair has encountered an error: {e}")
 
-def save_passport_pair(remote_server_name, api_key, api_secret):
-        connection = MongoConnection.get_database("api_passport")
-        try:
-                connection.insert_one({"Server": remote_server_name,"API key": api_key, "Secret": api_secret})
-        except Exception as e:
-                print(f"Saving Passport Pair has encountered an error: {e}")
+def save_key_pair(api_key, api_secret, db):
+        if check_existing_api_key(api_key, db):
+                connection = db.get_collection("api_keys")
+                try:
+                        connection.insert_one({"API key": api_key, "Hashed secret": api_secret})
+                except Exception as e:
+                        print(f"Saving API Pair has encountered an error: {e}")
+
+def save_passport_pair(api_key, api_secret, db):
+        if check_existing_api_key(api_key, db):
+                connection = db.get_database("api_passport")
+                try:
+                        connection.insert_one({"API key": api_key, "Secret": api_secret})
+                except Exception as e:
+                        print(f"Saving Passport Pair has encountered an error: {e}")
 
 def generate_api_credentials():
         # Generate a high-entropy Key and Secret
