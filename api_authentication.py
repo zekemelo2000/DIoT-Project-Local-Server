@@ -39,17 +39,17 @@ def check_hash(remote_token):
 
 async def save_key_pair(api_key, api_secret, db):
         if check_existing_api_key(api_key, db):
-                connection = db.get_collection("api_keys")
+                collection = db.get_collection("api_keys")
                 try:
-                        connection.insert_one({"API key": api_key, "Hashed secret": api_secret})
+                        collection.insert_one({"API key": api_key, "Hashed secret": api_secret})
                 except Exception as e:
                         print(f"Saving API Pair has encountered an error: {e}")
 
 def save_passport_pair(api_key, api_secret, db):
         if check_existing_api_key(api_key, db):
-                connection = db.get_collection("api_passport")
+                collection = db.get_collection("api_passport")
                 try:
-                        connection.insert_one({"API key": api_key, "Secret": api_secret})
+                        collection.insert_one({"API key": api_key, "Secret": api_secret})
                 except Exception as e:
                         print(f"Saving Passport Pair has encountered an error: {e}")
 
