@@ -18,20 +18,20 @@ hashed_server_key = os.getenv("HASHED_SERVER_KEY").encode("utf-8")
 # Could be used by Remote Server to Pair with Local
 
 def check_existing_api_key(api_key,db):
-        connection = db.get_collection("api_keys")
+        collection = db.get_collection("api_keys")
         try:
-                entry = connection.find_one({"API key": api_key})
+                entry = collection.find_one({"API key": api_key})
                 if entry is not None:
                         return True
                 else:
                         return False
         except Exception as e:
-                print(f"Saving API Key has encountered an error: {e}")
+                print(f"Checking API Key has encountered an error: {e}")
 
 def check_hash(remote_token):
         ph = PasswordHasher()
         try:
-                ph.verify(remote_token, hashed_server_key)
+                ph.verify(hashed_server_key, remote_token)
                 return True
         except Exception as e:
                 print(f"Saving API Key has encountered an error: {e}")
@@ -73,23 +73,23 @@ async def pair_server(pairing_url, db):
         headers = {"Authorization": server_key}
         body = {"server_name": server_name.decode("utf-8")}
 
-        print(headers)
-
         response = None
         try:
                 response = requests.post(pairing_url.encode('utf-8'), headers=headers, json=body)
         except Exception as e:
                 print(f"Saving Pairing has encountered an error: {e}")
 
-        if response.status_code == 200:
-                print(response)
-                cred = response.json()
-                #print(f"Pairing successful.")
-                #print(f"API_KEY: {cred[0]["api_key"]}")
-                #print(f"API_SECRET: {cred[0]["secret"]}")
-                save_passport_pair(cred[0]["api_key"], cred[0]["secret"], db)
+        if response is not None:
+                if response.status_code == 200:
+                        cred = response.json()
+                        #print(f"Pairing successful.")
+                        #print(f"API_KEY: {cred[0]["api_key"]}")
+                        #print(f"API_SECRET: {cred[0]["secret"]}")
+                        save_passport_pair(cred[0]["api_key"], cred[0]["secret"], db)
+                else:
+                        print(f"Pairing failed.")
         else:
-                print(f"Pairing failed.")
+                print(f"The response was empty")
 
 
 # FIX ME to validate later

@@ -27,7 +27,6 @@ async def pair():
             api_authentication.generate_api_credentials())
 
         secret_hash = argon2.hash(secret_plaintext)
-        print(api_key, secret_plaintext, secret_hash)
 
         await api_authentication.save_key_pair(api_key, secret_hash, db)
 

@@ -21,7 +21,7 @@ async def server():
         entry = await mongo_collection.find_one({"API key": "test"})
         if entry is not None:
             print(f"API key is {entry['API key']}")
-            print(f"Dummy secret is {entry["Hashed secret"]}")
+            print(f"Dummy secret is {entry['Hashed secret']}")
     except OperationFailure:
         print(f"error has occurred: Authentication required")
     finally:
