@@ -73,6 +73,47 @@ api_passport_validation = {
   },
 }
 
+local_users_validation = {
+  "$jsonSchema": {
+    "bsonType": "object",
+    "required": [
+      "Username"
+      "Password",
+      "Devices"
+    ],
+    "properties": {
+      "Username": {
+        "bsonType": "string"
+      },
+      "Password": {
+        "bsonType": "string"
+      }
+    }
+  },
+}
+
+remote_users_validation = {
+  "$jsonSchema": {
+    "bsonType": "object",
+    "required": [
+      "Username"
+      "Password",
+      "Local Server"
+    ],
+    "properties": {
+      "Username": {
+        "bsonType": "string"
+      },
+      "Password": {
+        "bsonType": "string"
+      },
+      "Local Server": {
+        "bsonType": "string"
+      }
+    }
+  },
+}
+
 
 async def initialize_database(db):
     try:
