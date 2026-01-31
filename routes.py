@@ -16,9 +16,12 @@ async def pair():
         admin_token =  request.headers.get("Authorization")
         server_name = my_request.get("server_name")
 
+        if api_authentication.check_existing_server(server_name,db):
+            print("Server already exists, No further action will be taken.")
+            return 400
         if admin_token is None:
             print("admin token was not provided")
-            return {"Error no Authorization header"}, 401
+            return {"Error no Authorization header"}, 400
         if not api_authentication.check_hash(admin_token):
             print("Error on Server Key")
             return {"error": "Unauthorized"}, 401
@@ -28,9 +31,11 @@ async def pair():
 
         secret_hash = argon2.hash(secret_plaintext)
 
-        await api_authentication.save_key_pair(api_key, secret_hash, db)
+        await api_authentication.save_key_pair(server_name, api_key, secret_hash, db)
 
-        return jsonify({"api_key": api_key,
+        own_server_name = os.getenv("SERVER_NAME")
+        return jsonify({"server_name": own_server_name,
+                        "api_key": api_key,
                         "secret": secret_plaintext}, 200)
     if request.method == "GET":
         return "<h1>Welcome to my Quart GET Server </h1><p>The server is active!</p>"

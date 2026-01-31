@@ -17,16 +17,29 @@ hashed_server_key = os.getenv("HASHED_SERVER_KEY").encode("utf-8")
 # Meant to be used by Local Servers to Pair with Remote Servers,
 # Could be used by Remote Server to Pair with Local
 
-def check_existing_api_key(api_key,db):
+def check_existing_server(server,db):
         collection = db.get_collection("api_keys")
         try:
-                entry = collection.find_one({"API key": api_key})
+                entry = collection.find_one({"server name": server})
                 if entry is not None:
+                        print(f"{entry['server name']} already exists in api_passport.")
                         return True
                 else:
                         return False
         except Exception as e:
-                print(f"Checking API Key has encountered an error: {e}")
+                print(f"Checking Server Name has encountered an error: {e}")
+
+
+# def check_existing_api_key(api_key,db):
+#         collection = db.get_collection("api_keys")
+#         try:
+#                 entry = collection.find_one({"API key": api_key})
+#                 if entry is not None:
+#                         return True
+#                 else:
+#                         return False
+#         except Exception as e:
+#                 print(f"Checking API Key has encountered an error: {e}")
 
 def check_hash(remote_token):
         ph = PasswordHasher()
@@ -37,21 +50,19 @@ def check_hash(remote_token):
                 print(f"Saving API Key has encountered an error: {e}")
                 return False
 
-async def save_key_pair(api_key, api_secret, db):
-        if check_existing_api_key(api_key, db):
-                collection = db.get_collection("api_keys")
-                try:
-                        collection.insert_one({"API key": api_key, "Hashed secret": api_secret})
-                except Exception as e:
-                        print(f"Saving API Pair has encountered an error: {e}")
+async def save_key_pair(myserver_name, api_key, api_secret, db):
+        collection = db.get_collection("api_keys")
+        try:
+                collection.insert_one({"Server Name": myserver_name, "API key": api_key, "Hashed secret": api_secret})
+        except Exception as e:
+                print(f"Saving API Pair has encountered an error: {e}")
 
-def save_passport_pair(api_key, api_secret, db):
-        if check_existing_api_key(api_key, db):
-                collection = db.get_collection("api_passport")
-                try:
-                        collection.insert_one({"API key": api_key, "Secret": api_secret})
-                except Exception as e:
-                        print(f"Saving Passport Pair has encountered an error: {e}")
+def save_passport_pair(myserver_name, api_key, api_secret, db):
+        collection = db.get_collection("api_passport")
+        try:
+                collection.insert_one({"Server Name": myserver_name,"API key": api_key, "Secret": api_secret})
+        except Exception as e:
+                print(f"Saving Passport Pair has encountered an error: {e}")
 
 def generate_api_credentials():
         # Generate a high-entropy Key and Secret
@@ -85,7 +96,8 @@ async def pair_server(pairing_url, db):
                         #print(f"Pairing successful.")
                         #print(f"API_KEY: {cred[0]["api_key"]}")
                         #print(f"API_SECRET: {cred[0]["secret"]}")
-                        save_passport_pair(cred[0]["api_key"], cred[0]["secret"], db)
+                        save_passport_pair(cred[0]["server_name"], cred[0]["api_key"], cred[0]["secret"], db)
+                        print(f"Pairing with {cred[0]["server_name"]} successful.")
                 else:
                         print(f"Pairing failed.")
         else:

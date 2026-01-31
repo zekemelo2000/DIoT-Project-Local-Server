@@ -4,6 +4,7 @@ api_keys_validation = {
   "$jsonSchema": {
     "bsonType": "object",
     "required": [
+      "Server Name"
       "API key",
       "Hashed secret"
     ],
@@ -18,18 +19,22 @@ api_keys_validation = {
   },
 }
 
-dummy_api_keys_validation = {
+api_passport_validation = {
   "$jsonSchema": {
     "bsonType": "object",
     "required": [
+      "Server Name"
       "API key",
       "Secret"
     ],
     "properties": {
+      "Server Name": {
+          "bsonType": "string"
+      },
       "API key": {
         "bsonType": "string"
       },
-      "Hashed secret": {
+      "Secret": {
         "bsonType": "string"
       }
     }
@@ -48,25 +53,6 @@ wifi_connections_validation = {
         "bsonType": "string"
       },
       "SSID": {
-        "bsonType": "string"
-      }
-    }
-  },
-}
-
-api_passport_validation = {
-  "$jsonSchema": {
-    "bsonType": "object",
-    "required": [
-      "Server"
-      "API key",
-      "Secret"
-    ],
-    "properties": {
-      "API key": {
-        "bsonType": "string"
-      },
-      "Secret": {
         "bsonType": "string"
       }
     }
@@ -123,12 +109,6 @@ async def initialize_database(db):
         print("Collection 'api_keys' already exists.")
 
     try:
-        await db.db.create_collection("dummy_api_keys", validator=dummy_api_keys_validation )
-        print("Collection 'dummy_api_keys' created.")
-    except CollectionInvalid:
-        print("Collection 'dummy_api_keys' already exists.")
-
-    try:
         await db.db.create_collection("wifi_connections", validator=wifi_connections_validation )
         print("Collection 'wifi_connections' created.")
     except CollectionInvalid:
@@ -154,13 +134,6 @@ async def initialize_database(db):
 
 async def drop_database(db):
     collection_name = "api_keys"
-    if collection_name in await db.db.list_collection_names():
-        await db.db.drop_collection(collection_name)
-        print(f"Collection {collection_name} dropped.")
-    else:
-        print(f"Collection {collection_name} does not exist.")
-
-    collection_name = "dummy_api_keys"
     if collection_name in await db.db.list_collection_names():
         await db.db.drop_collection(collection_name)
         print(f"Collection {collection_name} dropped.")
