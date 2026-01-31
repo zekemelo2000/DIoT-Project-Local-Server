@@ -140,6 +140,18 @@ async def initialize_database(db):
     except CollectionInvalid:
         print("Collection 'api_passport_validation' already exists.")
 
+    try:
+        await db.db.create_collection("local_users_validation", validator=local_users_validation)
+        print("Collection 'local_users_validation' created.")
+    except CollectionInvalid:
+        print("Collection 'local_users_validation' already exists.")
+
+    try:
+        await db.db.create_collection("remote_users_validation", validator=local_users_validation)
+        print("Collection 'remote_users_validation' created.")
+    except CollectionInvalid:
+        print("Collection 'remote_users_validation' already exists.")
+
 async def drop_database(db):
     collection_name = "api_keys"
     if collection_name in await db.db.list_collection_names():
@@ -162,7 +174,21 @@ async def drop_database(db):
     else:
         print(f"Collection {collection_name} does not exist.")
 
-    collection_name = "api_passport_validation"
+    collection_name = "api_passport"
+    if collection_name in await db.db.list_collection_names():
+        await db.db.drop_collection(collection_name)
+        print(f"Collection {collection_name} dropped.")
+    else:
+        print(f"Collection {collection_name} does not exist.")
+
+    collection_name = "local_users"
+    if collection_name in await db.db.list_collection_names():
+        await db.db.drop_collection(collection_name)
+        print(f"Collection {collection_name} dropped.")
+    else:
+        print(f"Collection {collection_name} does not exist.")
+
+    collection_name = "remote_users"
     if collection_name in await db.db.list_collection_names():
         await db.db.drop_collection(collection_name)
         print(f"Collection {collection_name} dropped.")
