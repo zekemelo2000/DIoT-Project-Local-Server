@@ -17,10 +17,10 @@ hashed_server_key = os.getenv("HASHED_SERVER_KEY").encode("utf-8")
 # Meant to be used by Local Servers to Pair with Remote Servers,
 # Could be used by Remote Server to Pair with Local
 
-def check_existing_server(server,db):
+async def check_existing_server(server,db):
         collection = db.get_collection("api_keys")
         try:
-                entry = collection.find_one({"server name": server})
+                entry = await collection.find_one({"server name": server})
                 if entry is not None:
                         print(f"{entry['server name']} already exists in api_passport.")
                         return True
@@ -28,7 +28,6 @@ def check_existing_server(server,db):
                         return False
         except Exception as e:
                 print(f"Checking Server Name has encountered an error: {e}")
-
 
 # def check_existing_api_key(api_key,db):
 #         collection = db.get_collection("api_keys")

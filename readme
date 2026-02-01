@@ -1,0 +1,24 @@
+configure .env
+
+configure mongodb
+    configure admin account and server account
+    set the account details into the .env file
+
+configure redis
+    On windows:
+        install Docker Desktop
+        make sure to enable WSL2
+        Restart
+        After restart finish docker installation
+        Login/Register docker desktop
+        One a terminal insert:
+            docker run --name my-redis -p 6379:6379 -d redis
+    On Linux:
+        sudo apt update
+        sudo apt install redis-server
+        sudo service redis-server start
+        test with:
+            redis-cli ping
+            should return: "PONG"
+configure npm
+    npx create-react-app my-frontend

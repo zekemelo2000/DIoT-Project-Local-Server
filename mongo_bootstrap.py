@@ -63,7 +63,7 @@ local_users_validation = {
   "$jsonSchema": {
     "bsonType": "object",
     "required": [
-      "Username"
+      "Username",
       "Password",
       "Devices"
     ],
@@ -115,22 +115,22 @@ async def initialize_database(db):
         print("Collection 'wifi_connections' already exists.")
 
     try:
-        await db.db.create_collection("api_passport_validation", validator=api_passport_validation )
-        print("Collection 'api_passport_validation' created.")
+        await db.db.create_collection("api_passport", validator=api_passport_validation )
+        print("Collection 'api_passport' created.")
     except CollectionInvalid:
-        print("Collection 'api_passport_validation' already exists.")
+        print("Collection 'api_passport' already exists.")
 
     try:
-        await db.db.create_collection("local_users_validation", validator=local_users_validation)
-        print("Collection 'local_users_validation' created.")
+        await db.db.create_collection("local_users", validator=local_users_validation)
+        print("Collection 'local_users' created.")
     except CollectionInvalid:
-        print("Collection 'local_users_validation' already exists.")
+        print("Collection 'local_users' already exists.")
 
     try:
-        await db.db.create_collection("remote_users_validation", validator=local_users_validation)
-        print("Collection 'remote_users_validation' created.")
+        await db.db.create_collection("remote_users", validator=local_users_validation)
+        print("Collection 'remote_users' created.")
     except CollectionInvalid:
-        print("Collection 'remote_users_validation' already exists.")
+        print("Collection 'remote_users' already exists.")
 
 async def drop_database(db):
     collection_name = "api_keys"

@@ -3,16 +3,33 @@ import asyncio
 from dotenv import load_dotenv
 from pymongo.errors import OperationFailure
 from quart import Quart
-
+import redis
+from redis import asyncio as aioredis
 import input_loop
 import mongo_connection
 from routes import api_bp
+from datetime import timedelta
+from quart_session import Session
 
-app = Quart(__name__)
-mongo_connection = mongo_connection.MongoConnection()
-app.mongo_connection = mongo_connection
-app.register_blueprint(api_bp)
+#load environment first
 load_dotenv()
+
+#initialize the app
+app = Quart(__name__)
+
+#configure redis
+app.config["SESSION_TYPE"] = 'redis'
+app.config['SESSION_REDIS'] = aioredis.from_url('redis://localhost:6379')
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
+
+#hook session in
+Session(app)
+
+#initialize database connection
+app.mongo_connection = mongo_connection.MongoConnection()
+
+#register blueprint
+app.register_blueprint(api_bp)
 
 async def server():
     # For connection testing purposes
