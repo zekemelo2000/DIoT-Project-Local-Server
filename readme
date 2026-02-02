@@ -22,3 +22,5 @@ configure redis
             should return: "PONG"
 configure npm
     npx create-react-app my-frontend
+    add """proxy": "http://localhost:5000"" to package.json bellow private
+    replace 5000 with the port you have it set for quart

@@ -71,7 +71,7 @@ async def local_login():
         session.permanent = True
         session['user_id'] = username
         session['login_devices'] = await user_authentication.get_devices(username, db)
-        return jsonify({"message": "Login successful"}), 200
+        return  redirect(url_for("api.devices"))
     return print("this is the default route")
 
 
@@ -108,11 +108,13 @@ async def logout():
     session.clear()
     return jsonify({"message": "Logged out."})
 
-@api_bp.route('/devices')
+@api_bp.route('/devices', methods=["GET"])
 @login_required
 async def devices():
-    if request.method == 'POST':
-        pass
+    if request.method == 'GET':
+        return "This is the device GET page"
+    else:
+        return "This is the device page"
 
 
 @api_bp.route('/pass-remote-to-local', methods=['GET', 'POST'])
