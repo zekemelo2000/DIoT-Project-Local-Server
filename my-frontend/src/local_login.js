@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-function LocalLoginPage() {
+function LocalLoginPage() {const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -15,9 +16,10 @@ function LocalLoginPage() {
       credentials: 'include'
     });
 
-    if (response.ok) {
-      alert("Logged in!");
-      // Redirect user or update global state here
+    const data = await response.json()
+
+    if (response.ok && data.status === "success") {
+        navigate('/devices');
     } else {
       alert("Login failed");
     }

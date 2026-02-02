@@ -1,8 +1,39 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function DevicesPage() {
   const navigate = useNavigate();
+  const [devices, setDevices] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() =>{
+      const verifySession = async() => {
+          try{
+              const response = await fetch('/check-session',{
+                  method:'GET',
+                  credentials: 'include'
+              });
+
+              if (response.ok) {
+                  const data=  await response.json();
+                  setDevices(data.devices);
+                  setLoading(false);
+              }
+              else{
+                  navigate('/');
+              }
+          } catch(error){
+              navigate('/');
+          }
+      };
+
+      verifySession().catch(console.error);
+
+      const interval = setInterval(verifySession,30000);
+      return () => clearInterval(interval);
+  }, [navigate]);
+
+  if (loading) return <p>Loading your dashboard...</p>
 
   return (
     <div style={{ padding: '40px', textAlign: 'center' }}>
@@ -13,7 +44,7 @@ function DevicesPage() {
         <h3>Your Connected Devices:</h3>
         <ul style={{ listStyle: 'none', padding: 0 }}>
           <li>🟢 Smart Thermostat - Online</li>
-          <li>🟢 Living Room Light - Online</li>
+          <li>🟢 Living Room Light - Online</li>a
           <li>🔴 Garage Camera - Offline</li>
         </ul>
       </div>

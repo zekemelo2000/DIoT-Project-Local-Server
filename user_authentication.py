@@ -33,7 +33,10 @@ async def verify_local_user(user:str, password: str, db):
     collection = db.get_collection(serverside)
 
     entry = await collection.find_one({"Username": user})
-    hashed_password = entry['Password']
+    if entry is not None:
+        hashed_password = await hash_password(password)
+    else:
+        return False
     if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
         return True
     else:

@@ -22,6 +22,16 @@ def login_required(f):
 
     return decorated_function
 
+@api_bp.route('/check-session', methods =['GET'])
+async def check_session():
+    if 'user_id' in session:
+        return jsonify({
+            "authenticated": True,
+            "user": session["user_id"],
+            "devices": session.get('login_devices', [])
+        }), 200
+    return jsonify({"authenticated": False}), 401
+
 @api_bp.route('/local-register', methods=['POST'])
 async def local_register():
     if request.method == 'POST':
@@ -71,7 +81,11 @@ async def local_login():
         session.permanent = True
         session['user_id'] = username
         session['login_devices'] = await user_authentication.get_devices(username, db)
-        return  redirect(url_for("api.devices"))
+        return  jsonify({
+            "status": "success",
+            "redirect_url": "/devices",
+            "message": "Logged in successfully"
+        }),200
     return print("this is the default route")
 
 
