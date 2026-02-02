@@ -14,12 +14,13 @@ async def hash_password(password: str) -> str:
     hashed = await asyncio.to_thread(bcrypt.hashpw,password_bytes, bcrypt.gensalt(rounds=12))
     return hashed.decode('utf-8')
 
-async def get_devices(user:str, db):
-    collection = db.get_collection("local_users")
-    entry = await collection.find_one({"Username": user})
-    if entry:
+async def get_devices(user__id, db):
+    collection = db.get_collection("devices")
+    entry = await collection.find({"User__id": user__id})
+    if entry is not None:
         return entry.get('Devices')
-    return None
+    else:
+        return None
 
 async def get_local_server(user: str, db):
     collection = db.get_collection("remote_users")

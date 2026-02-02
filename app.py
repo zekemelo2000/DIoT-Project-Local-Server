@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 from dotenv import load_dotenv
 from pymongo.errors import OperationFailure
@@ -18,9 +19,16 @@ load_dotenv()
 app = Quart(__name__)
 
 #configure redis
+api_secret_key = os.getenv("API_SECRET_KEY")
+app.secret_key = api_secret_key
 app.config["SESSION_TYPE"] = 'redis'
 app.config['SESSION_REDIS'] = aioredis.from_url('redis://localhost:6379')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
+app.config.update(
+    SESSION_COOKIE_SAMESITE='Lax',  # Allows cookies to be sent across your proxy
+    SESSION_COOKIE_HTTPONLY=True,   # Prevents JavaScript from accessing the cookie
+    SESSION_COOKIE_SECURE=False,    # Set to True only if you are using HTTPS/SSL
+)
 
 #hook session in
 Session(app)

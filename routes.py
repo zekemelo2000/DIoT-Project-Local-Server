@@ -70,6 +70,7 @@ async def local_login():
 
         username = my_request.get("username")
         password = my_request.get("password")
+        user__id = my_request.get("user__id")
         db = current_app.mongo_connection
 
         login_devices = await user_authentication.verify_local_user(username, password,db)
@@ -79,8 +80,8 @@ async def local_login():
         #do something with devices
 
         session.permanent = True
-        session['user_id'] = username
-        session['login_devices'] = await user_authentication.get_devices(username, db)
+        session['user_id'] = user__id
+        session['login_devices'] = await user_authentication.get_devices(user__id, db)
         return  jsonify({
             "status": "success",
             "redirect_url": "/devices",

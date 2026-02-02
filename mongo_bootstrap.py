@@ -64,8 +64,7 @@ local_users_validation = {
     "bsonType": "object",
     "required": [
       "Username",
-      "Password",
-      "Devices"
+      "Password"
     ],
     "properties": {
       "Username": {
@@ -100,6 +99,35 @@ remote_users_validation = {
   },
 }
 
+devices_validation = {
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": [
+            "User__id"
+            "Device Name",
+            "Device Type",
+            "API Key",
+            "API Secret"
+        ],
+        "properties": {
+            "User__id": {
+                "bsonType": "objectId"
+            },
+            "Device Name": {
+                "bsonType": "string"
+            },
+            "Device Type": {
+                "bsonType": "string"
+            },
+            "API Key": {
+                "bsonType": "string"
+            },
+            "API Secret": {
+                "bsonType": "string"
+            }
+        }
+    },
+}
 
 async def initialize_database(db):
     try:
@@ -132,6 +160,12 @@ async def initialize_database(db):
     except CollectionInvalid:
         print("Collection 'remote_users' already exists.")
 
+    try:
+        await db.db.create_collection("devices", validator=devices_validation)
+        print("Collection 'devices' created.")
+    except CollectionInvalid:
+        print("Collection 'devices' already exists.")
+
 async def drop_database(db):
     collection_name = "api_keys"
     if collection_name in await db.db.list_collection_names():
@@ -162,6 +196,13 @@ async def drop_database(db):
         print(f"Collection {collection_name} does not exist.")
 
     collection_name = "remote_users"
+    if collection_name in await db.db.list_collection_names():
+        await db.db.drop_collection(collection_name)
+        print(f"Collection {collection_name} dropped.")
+    else:
+        print(f"Collection {collection_name} does not exist.")
+
+    collection_name = "devices"
     if collection_name in await db.db.list_collection_names():
         await db.db.drop_collection(collection_name)
         print(f"Collection {collection_name} dropped.")
