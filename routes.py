@@ -80,7 +80,7 @@ async def local_login():
         #do something with devices
 
         session.permanent = True
-        session['user_id'] = user__id
+        session['user_id'] = str(user__id)
         session['login_devices'] = await user_authentication.get_devices(user__id, db)
         return  jsonify({
             "status": "success",

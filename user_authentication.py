@@ -16,9 +16,10 @@ async def hash_password(password: str) -> str:
 
 async def get_devices(user__id, db):
     collection = db.get_collection("devices")
-    entry = await collection.find({"User__id": user__id})
-    if entry is not None:
-        return entry.get('Devices')
+    cursor = collection.find({"User__id": user__id})
+    entries = await cursor.to_list(length=100)
+    if entries is not None:
+        return entries
     else:
         return None
 
