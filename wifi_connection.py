@@ -18,17 +18,6 @@ async def scan_ssids():
     for network in results:
         print(f"{network.ssid:<25} | {network.signal}")
 
-async def password_check(ssid):
-    mongoconnection = MongoConnection.get_database("wifi_connections")
-    result = mongoconnection.find_one({"SSID": ssid})
-    if result is None:
-        print("This SSID is not saved")
-        return False
-    else:
-        print("This SSID and password is saved")
-        return True
-
-
 async def verify_wifi_credentials(ssid, password):
     """Bridge function to run the blocking Wi-Fi logic in a background thread."""
     return await asyncio.to_thread(sync_verify_wifi, ssid, password)

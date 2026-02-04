@@ -103,9 +103,10 @@ devices_validation = {
     "$jsonSchema": {
         "bsonType": "object",
         "required": [
-            "User__id"
+            "User__id",
             "Device Name",
             "Device Type",
+            "Network ID",
             "API Key",
             "API Secret"
         ],
@@ -117,6 +118,9 @@ devices_validation = {
                 "bsonType": "string"
             },
             "Device Type": {
+                "bsonType": "string"
+            },
+            "Network ID": {
                 "bsonType": "string"
             },
             "API Key": {

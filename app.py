@@ -24,6 +24,9 @@ app.secret_key = api_secret_key
 app.config["SESSION_TYPE"] = 'redis'
 app.config['SESSION_REDIS'] = aioredis.from_url('redis://localhost:6379')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
+app.config['SERVER_SETTINGS'] = {
+
+}
 app.config.update(
     SESSION_COOKIE_SAMESITE='Lax',  # Allows cookies to be sent across your proxy
     SESSION_COOKIE_HTTPONLY=True,   # Prevents JavaScript from accessing the cookie

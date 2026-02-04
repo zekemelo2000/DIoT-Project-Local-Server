@@ -1,15 +1,20 @@
 import os
+import socket
+from quart import Quart
+from datetime import datetime
+from zeroconf import IPVersion, ServiceInfo
+from zeroconf.asyncio import AsyncZeroconf
+from typing import Optional
+import socket
 
-from cffi.ffiplatform import maybe_relative_path
 from passlib.hash import argon2
 from quart import Blueprint, request, jsonify, current_app, session, redirect, render_template, url_for
 from functools import wraps
-
-
 import api_authentication
 import user_authentication
 
 api_bp = Blueprint('api', __name__)
+mdns_bus: Optional[AsyncZeroconf] = None
 
 def login_required(f):
     @wraps(f)
@@ -134,7 +139,7 @@ async def devices():
 
 @api_bp.route('/pass-remote-to-local', methods=['GET', 'POST'])
 @login_required
-async def passRemoteToLocal():
+async def pass_remote_to_local():
     if request.method == 'POST':
 
         #Need to reauthorize user to get the OK
@@ -143,6 +148,16 @@ async def passRemoteToLocal():
         pass
     elif request.method == 'GET':
         pass
+
+@api_bp.route('/health', methods=['GET'])
+async def health_check():
+    print(f"Health check activated")
+    last_seen_esp32 = datetime.now().strftime("%H:%M:%S")
+
+    # Optional: Print to your terminal so you can see it working
+    print(f"[*] Heartbeat received from ESP32 at {last_seen_esp32}")
+
+    return "OK", 200
 
 
 
@@ -213,3 +228,71 @@ async def remote_pair():
         return '200'
     else:
         return '500'
+
+
+async def start_mdns():
+    desc = {'path': '/health'}
+
+    # --- DYNAMIC IP FINDER ---
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # This doesn't actually send data to Google.
+        # It just checks which network interface has internet access.
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+    except Exception as e:
+        print(f"[!] Could not determine IP via socket trick: {e}")
+        # Fallback: try getting the hostname manually
+        local_ip = socket.gethostbyname(socket.gethostname())
+    finally:
+        s.close()
+
+    # --- VERIFICATION PRINT ---
+    # CHECK THIS in your terminal when the server starts!
+    # If it says 127.0.0.1, mDNS will NOT work.
+    # If it says 192.168.x.x or 10.0.x.x, it is good.
+    print(f"DEBUG: mDNS binding to detected IP: {local_ip}")
+    # --------------------------
+
+    info = ServiceInfo(
+        "_http._tcp.local.",
+        "quart-master._http._tcp.local.",
+        addresses=[socket.inet_aton(local_ip)],
+        port=8080,
+        properties=desc,
+        server="quart-master.local.",
+    )
+
+    zc = AsyncZeroconf(ip_version=IPVersion.V4Only)
+    await zc.async_register_service(info)
+
+    print(f"[*] mDNS advertising active at {local_ip}")
+    return zc
+
+@api_bp.before_app_serving
+async def startup():
+    global mdns_bus
+    # Start mDNS when the server starts
+    mdns_bus = await start_mdns()
+
+
+@api_bp.after_app_serving
+async def shutdown():
+    global mdns_bus
+
+    if mdns_bus is not None:
+        print("[*] Shutting down mDNS...")
+        try:
+            # AsyncZeroconf handles unregistering services automatically when you close it.
+            # We must use 'await' and the async version of the method.
+            await mdns_bus.async_close()
+            print("mDNS closed.")
+        except Exception as e:
+            print(f"Error during mDNS shutdown: {e}")
+
+        try:
+            current_app.mongo_connection.close()
+            print("mongo connection closed.")
+        except Exception as e:
+            print(f"Error during Mongo Connection shutdown: {e}")
+
