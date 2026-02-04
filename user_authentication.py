@@ -3,6 +3,9 @@ from functools import wraps
 
 import bcrypt
 import asyncio
+
+from bson import ObjectId
+
 import mongo_connection
 from motor.motor_asyncio import AsyncIOMotorClient
 from quart import Quart, request, jsonify, session
@@ -14,14 +17,32 @@ async def hash_password(password: str) -> str:
     hashed = await asyncio.to_thread(bcrypt.hashpw,password_bytes, bcrypt.gensalt(rounds=12))
     return hashed.decode('utf-8')
 
+
 async def get_devices(user__id, db):
+    print(f"Here are the devices: {user__id}")
     collection = db.get_collection("devices")
-    cursor = collection.find({"User__id": user__id})
+
+    # Ensure we are searching with an ObjectId object, not a string
+    try:
+        query_id = ObjectId(user__id) if isinstance(user__id, str) else user__id
+    except Exception as e:
+        print(f"Invalid ID format: {e}")
+        return []
+
+    cursor = collection.find({"User__id": query_id})
     entries = await cursor.to_list(length=100)
-    if entries is not None:
+
+    # IMPORTANT: Convert ObjectIds to strings before returning to session
+    # Redis session storage cannot serialize raw ObjectIds
+    print(f"here are the entries: \n\n{entries}\n\n")
+    if entries:
+        for entry in entries:
+            entry["_id"] = str(entry["_id"])
+            if "User__id" in entry:
+                entry["User__id"] = str(entry["User__id"])
         return entries
-    else:
-        return None
+
+    return []
 
 async def get_local_server(user: str, db):
     collection = db.get_collection("remote_users")

@@ -11,12 +11,18 @@ import mongo_connection
 from routes import api_bp
 from datetime import timedelta
 from quart_session import Session
+from quart_cors import cors
 
 #load environment first
 load_dotenv()
 
 #initialize the app
 app = Quart(__name__)
+app = cors(
+    app,
+    allow_origin="http://localhost:3000",
+    allow_credentials=True
+)
 
 #configure redis
 api_secret_key = os.getenv("API_SECRET_KEY")

@@ -75,41 +75,6 @@ async def get_my_ip():
         s.close()
     return ip
 
-async def update_device(device_name, device_key, device_secret, update_val):
-    """ This is used after login, One device is passed in for you to update"""
-
-    headers = {
-        "X-API-Key": device_key,
-        "X-API-Secret": device_secret,
-    }
-    payload = {
-        "update_value" : update_val
-    }
-    response = await my_http.send_request("http://192.168.4.1/update", payload, headers)
-    if response.status_code == 200:
-        print(f"[*] Successfully updated device: {device_name}")
-    else:
-        print(f"[*] Failed to update device: {device_name}")
-
-
-async def get_data(device_api, device_secret):
-   payload = {
-       "api_key" : device_api,
-       "api_secret" : device_secret
-   }
-   try:
-       response = await my_http.send_request("http://192.168.4.1/config", payload)
-       try:
-           response = response.json()
-           value = response.get("value")
-           return value
-       except Exception as e:
-           print(f"[*] The JSON response is malformed: {e}")
-           return None
-   except Exception as e:
-       print(f"[*] The There was an error with the HTTP request: {e}")
-       return None
-
 
 async def pair_device(db, user__id, ssid, pw):
     line = await asyncio.to_thread(input, "WARNING: This will disconnect your WiFi. Continue? (y/n): ")
@@ -253,7 +218,8 @@ async def update_device(network_id, api_key, api_secret, new_value):
             response = await client.post(url, json=payload, headers=headers, timeout=5)
 
         if response.status_code == 200:
-            print(f"[*] Update Success: {response.text}")
+            data = response.text
+            return data
         else:
             print(f"[!] Update Failed: {response.status_code} - {response.text}")
     except Exception as e:

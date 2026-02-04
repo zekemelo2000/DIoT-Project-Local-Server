@@ -10,6 +10,8 @@ import socket
 from passlib.hash import argon2
 from quart import Blueprint, request, jsonify, current_app, session, redirect, render_template, url_for
 from functools import wraps
+
+import ESP32
 import api_authentication
 import user_authentication
 
@@ -74,18 +76,21 @@ async def local_login():
             return "Unknown format", 400
 
         username = my_request.get("username")
+        print(f"Username: {username}")
         password = my_request.get("password")
-        user__id = my_request.get("user__id")
         db = current_app.mongo_connection
 
-        login_devices = await user_authentication.verify_local_user(username, password,db)
-        if not login_devices:
+        if not await user_authentication.verify_local_user(username, password,db):
             return jsonify({"message": "Invalid Credentials"}), 401
+
+        user = await db.get_collection("local_users").find_one({"Username": username})
+        print(user)
+        user__id = str(user["_id"])
 
         #do something with devices
 
         session.permanent = True
-        session['user_id'] = str(user__id)
+        session['user_id'] = user__id
         session['login_devices'] = await user_authentication.get_devices(user__id, db)
         return  jsonify({
             "status": "success",
@@ -93,7 +98,6 @@ async def local_login():
             "message": "Logged in successfully"
         }),200
     return print("this is the default route")
-
 
 @api_bp.route('/remote-login', methods=['POST'])
 async def remote_login():
@@ -130,12 +134,70 @@ async def logout():
 
 @api_bp.route('/devices', methods=["GET"])
 @login_required
-async def devices():
-    if request.method == 'GET':
-        return "This is the device GET page"
-    else:
-        return "This is the device page"
+async def devices_route():  # Rename function to avoid conflict with list name
+    device_list = []
 
+    # login_devices in session should be a static list,
+    # not an async cursor (sessions can't store cursors)
+    login_data = session.get('login_devices', [])
+    print(f"the session devices are: {login_data}")
+
+    for doc in login_data:
+        device_list.append({
+            "name": doc.get("Device Name"),
+            "type": doc.get("Device Type"),
+            "networkId": doc.get("Network ID"),
+            "apiKey": doc.get("API Key"),
+            "apiSecret": doc.get("API Secret"),
+            "value": doc.get("value", -1)
+        })
+    return jsonify(device_list)
+
+
+@api_bp.route("/update-device", methods=["POST"])
+@login_required
+async def update_device():
+    # 1. Get JSON data from React
+    data = await request.get_json()
+
+    # 2. Extract values safely from the React request
+    network_id = data.get("networkId")
+    api_key    = data.get("apiKey")
+    api_secret = data.get("apiSecret")
+    new_value  = data.get("value")
+
+    # 3. Validation: Ensure all data exists
+    if any(v is None for v in [network_id, api_key, api_secret, new_value]):
+        return jsonify({
+            "status": "error",
+            "message": "Missing required parameters"
+        }), 400
+
+    try:
+        print(f"[*] Dispatching update to {network_id} with value: {new_value}")
+
+        # 4. Perform the update
+        # Ensure ESP32.update_device returns the HTTP status code (e.g., 200)
+        result = await ESP32.update_device(network_id, api_key, api_secret, new_value)
+
+        # 5. Fixed Defensive Check
+        # We check for None specifically. If result is 200 (an int), this passes.
+        if result is None:
+            raise Exception("No response object created. Check ESP32 network connectivity.")
+
+        # 6. Success: Device confirmed the update
+        return jsonify({
+            "status": "success",
+            "message": f"Device {network_id} confirmed update",
+            "http_code": result
+        }), 200
+
+    except Exception as e:
+        print(f"[!] Update failed for {network_id}: {e}")
+        return jsonify({
+            "status": "error",
+            "message": f"Failed to reach device: {str(e)}"
+        }), 500
 
 @api_bp.route('/pass-remote-to-local', methods=['GET', 'POST'])
 @login_required
@@ -295,4 +357,9 @@ async def shutdown():
             print("mongo connection closed.")
         except Exception as e:
             print(f"Error during Mongo Connection shutdown: {e}")
+
+        try:
+            session.clear()
+        except Exception as e:
+            print(f"Error during session clearing: {e}")
 
