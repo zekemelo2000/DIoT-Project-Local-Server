@@ -10,7 +10,7 @@ from passlib.hash import argon2
 from quart import Blueprint, request, jsonify, current_app, session, redirect, render_template, url_for
 from functools import wraps
 import globals
-from ESP32 import ESP32
+from ESP32
 import api_authentication
 import user_authentication
 
