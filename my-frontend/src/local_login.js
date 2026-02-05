@@ -4,11 +4,11 @@ import { useNavigate } from 'react-router-dom';
 function LocalLoginPage() {const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-
+  const apiUrl = process.env.REACT_APP_API_URL;
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    const response = await fetch('/local-login', {
+    const response = await fetch(`http://${apiUrl}/local-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),

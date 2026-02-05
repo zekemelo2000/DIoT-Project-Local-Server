@@ -3,11 +3,13 @@ import { SliderDevice, ToggleDevice } from './control';
 
 export default function Dashboard() {
   const [devices, setDevices] = useState([]);
+  const apiUrl = process.env.REACT_APP_API_URL;
 
   // 1. Fetch the list of devices (Runs First)
   const fetchDevices = async () => {
     try {
-      const res = await fetch('http://localhost:8080/devices', { credentials: 'include' });
+
+      const res = await fetch(`http://${apiUrl}/devices`, { credentials: 'include' });
 
       if (res.status === 401) {
         window.location.href = "/local-login";
@@ -26,7 +28,7 @@ export default function Dashboard() {
   // 2. Fetch value for a single device (Runs Second, once per device)
   const refreshDevice = async (device) => {
     try {
-      const res = await fetch('http://localhost:8080/get-device-value', {
+      const res = await fetch(`http://${apiUrl}/get-device-value`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -83,7 +85,7 @@ export default function Dashboard() {
       ));
 
       // 2. Send to server
-      await fetch('http://localhost:8080/update-device', {
+      await fetch(`http://${apiUrl}/update-device`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

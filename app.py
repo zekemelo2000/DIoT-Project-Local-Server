@@ -15,11 +15,12 @@ from quart_cors import cors
 #load environment first
 load_dotenv()
 
+localip = os.getenv("LOCALIP")
 #initialize the app
 app = Quart(__name__)
 app = cors(
     app,
-    allow_origin="http://localhost:3000",
+    allow_origin=f"http://{localip}:3000",
     allow_credentials=True
 )
 

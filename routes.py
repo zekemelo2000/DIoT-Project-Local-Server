@@ -357,7 +357,7 @@ async def start_mdns():
 
 @api_bp.before_app_serving
 async def startup():
-    globals.mdns_bus = AsyncZeroconf()
+    globals.mdns_bus = await start_mdns()
     # global mdns_bus
     # # Start mDNS when the server starts
     # mdns_bus = await start_mdns()
@@ -365,14 +365,13 @@ async def startup():
 
 @api_bp.after_app_serving
 async def shutdown():
-    global mdns_bus
 
-    if mdns_bus is not None:
+    if globals.mdns_bus is not None:
         print("[*] Shutting down mDNS...")
         try:
             # AsyncZeroconf handles unregistering services automatically when you close it.
             # We must use 'await' and the async version of the method.
-            await mdns_bus.async_close()
+            await globals.mdns_bus.async_close()
             print("mDNS closed.")
         except Exception as e:
             print(f"Error during mDNS shutdown: {e}")
