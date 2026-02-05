@@ -8,6 +8,16 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 
 class MongoConnection:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            print("Creating new connection...")
+            cls._instance = super(MongoConnection, cls).__new__(cls)
+            # Initialize your database connection here
+            cls._instance.connection_string = "mongodb://localhost:27017"
+        return cls._instance
+
     def __init__(self):
         load_dotenv()
         self.encoded_user = quote_plus(os.getenv("APP_USER"))
