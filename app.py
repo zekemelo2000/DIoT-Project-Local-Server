@@ -4,7 +4,6 @@ import os
 from dotenv import load_dotenv
 from pymongo.errors import OperationFailure
 from quart import Quart
-import redis
 from redis import asyncio as aioredis
 import input_loop
 import mongo_connection

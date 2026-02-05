@@ -1,6 +1,5 @@
 import os
-import socket
-from quart import Quart
+
 from datetime import datetime
 from zeroconf import IPVersion, ServiceInfo
 from zeroconf.asyncio import AsyncZeroconf
@@ -10,13 +9,13 @@ import socket
 from passlib.hash import argon2
 from quart import Blueprint, request, jsonify, current_app, session, redirect, render_template, url_for
 from functools import wraps
-
-import ESP32
+import globals
+from ESP32 import ESP32
 import api_authentication
 import user_authentication
 
 api_bp = Blueprint('api', __name__)
-mdns_bus: Optional[AsyncZeroconf] = None
+
 
 def login_required(f):
     @wraps(f)
@@ -153,20 +152,52 @@ async def devices_route():  # Rename function to avoid conflict with list name
         })
     return jsonify(device_list)
 
+@api_bp.route('/get-device-value', methods=['POST'])
+@login_required
+async def get_device_value():
+    data = await request.get_json()
+
+    network_id  = data.get("networkId")
+    api_key     = data.get("apiKey")
+    api_secret  = data.get("apiSecret")
+
+    if any(v is None for v in [network_id, api_key, api_secret]):
+        return jsonify({
+            "status": "error",
+            "message": "Missing required parameters"
+        }), 400
+
+    try:
+        result = await ESP32.get_data(network_id, api_key, api_secret)
+        if result is None:
+            raise Exception("No response object created. Check ESP32 network connectivity.")
+
+        return jsonify({
+            "status": "success",
+            "message": f"Device {network_id} confirmed update",
+            "http_code": result,
+            "value": result.get("value")
+        }), 200
+
+    except Exception as e:
+        print(f"[!] Update failed for {network_id}: {e}")
+        return jsonify({
+            "status": "error",
+            "message": f"Failed to reach device: {str(e)}"
+        }), 500
+
+
 
 @api_bp.route("/update-device", methods=["POST"])
 @login_required
 async def update_device():
-    # 1. Get JSON data from React
     data = await request.get_json()
 
-    # 2. Extract values safely from the React request
     network_id = data.get("networkId")
     api_key    = data.get("apiKey")
     api_secret = data.get("apiSecret")
     new_value  = data.get("value")
 
-    # 3. Validation: Ensure all data exists
     if any(v is None for v in [network_id, api_key, api_secret, new_value]):
         return jsonify({
             "status": "error",
@@ -175,17 +206,10 @@ async def update_device():
 
     try:
         print(f"[*] Dispatching update to {network_id} with value: {new_value}")
-
-        # 4. Perform the update
-        # Ensure ESP32.update_device returns the HTTP status code (e.g., 200)
         result = await ESP32.update_device(network_id, api_key, api_secret, new_value)
-
-        # 5. Fixed Defensive Check
-        # We check for None specifically. If result is 200 (an int), this passes.
         if result is None:
             raise Exception("No response object created. Check ESP32 network connectivity.")
 
-        # 6. Success: Device confirmed the update
         return jsonify({
             "status": "success",
             "message": f"Device {network_id} confirmed update",
@@ -333,9 +357,10 @@ async def start_mdns():
 
 @api_bp.before_app_serving
 async def startup():
-    global mdns_bus
-    # Start mDNS when the server starts
-    mdns_bus = await start_mdns()
+    globals.mdns_bus = AsyncZeroconf()
+    # global mdns_bus
+    # # Start mDNS when the server starts
+    # mdns_bus = await start_mdns()
 
 
 @api_bp.after_app_serving
